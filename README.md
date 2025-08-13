@@ -1,9 +1,34 @@
 # django-pgwatch
 
-A Django app that provides PostgreSQL LISTEN/NOTIFY functionality with persistence and playback capabilities. This solves the problem of missed notifications when consumers are disconnected by storing all notifications in a database table and providing automatic playback functionality.
+A Django app that provides PostgreSQL LISTEN/NOTIFY functionality with persistence and playback capabilities for **external database changes**. This tool is specifically designed for scenarios where database changes happen outside of your Django application and you need to react to them reliably.
+
+## When to Use This Tool
+
+**✅ Use django-pgwatch when:**
+- Database changes are made by **external systems** (other applications, direct SQL, stored procedures, batch jobs)
+- You have **multiple applications** sharing the same database
+- You need to react to changes from **legacy systems** that can't use Django signals
+- Database changes happen via **raw SQL** or **database triggers** 
+- You're integrating with **third-party systems** that modify your database directly
+
+**❌ Don't use django-pgwatch when:**
+- Changes only happen through Django ORM (use [Django signals](https://docs.djangoproject.com/en/stable/topics/signals/) instead)
+- You control all database writes in your application (use model methods or signals)
+- You need synchronous processing (this is asynchronous by design)
+
+## Example Use Cases
+
+- **Multi-tenant SaaS**: React to tenant data changes made by other microservices
+- **Legacy Integration**: Monitor changes from legacy systems that directly modify your database
+- **Data Pipeline**: Process changes from ETL jobs or data import scripts
+- **Real-time Analytics**: Track database changes for reporting dashboards
+- **Cache Invalidation**: Invalidate caches when external systems update data
+- **Webhook Integration**: Send webhooks when external batch jobs complete
 
 ## Table of Contents
 
+- [When to Use This Tool](#when-to-use-this-tool)
+- [Example Use Cases](#example-use-cases)
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Installation](#installation)
