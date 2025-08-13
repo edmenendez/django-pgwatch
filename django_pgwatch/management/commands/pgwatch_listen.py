@@ -1,7 +1,6 @@
 import importlib
 import signal
 import sys
-from typing import List, Type
 
 from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
@@ -100,10 +99,10 @@ class Command(BaseCommand):
 
     def discover_consumers(
         self,
-        app_names: List[str] = None,
-        consumer_ids: List[str] = None,
-        exclude_consumer_ids: List[str] = None,
-    ) -> List[Type[BaseConsumer]]:
+        app_names: list[str] = None,
+        consumer_ids: list[str] = None,
+        exclude_consumer_ids: list[str] = None,
+    ) -> list[type[BaseConsumer]]:
         """Discover consumers from INSTALLED_APPS."""
         discovered_consumers = []
         exclude_consumer_ids = exclude_consumer_ids or []
@@ -172,9 +171,9 @@ class Command(BaseCommand):
 
     def list_consumers(
         self,
-        app_names: List[str] = None,
-        consumer_ids: List[str] = None,
-        exclude_consumer_ids: List[str] = None,
+        app_names: list[str] = None,
+        consumer_ids: list[str] = None,
+        exclude_consumer_ids: list[str] = None,
     ):
         """List all discoverable consumers."""
         consumers = self.discover_consumers(
@@ -200,7 +199,7 @@ class Command(BaseCommand):
 
     def run_multiple_consumers(
         self,
-        consumer_classes: List[Type[BaseConsumer]],
+        consumer_classes: list[type[BaseConsumer]],
         timeout: int,
         reconnect_delay: int,
         max_batch_size: int,

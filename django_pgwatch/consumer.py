@@ -1,14 +1,14 @@
+import contextlib
 import json
 import logging
 import select
 import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Optional
 
 import psycopg
 from django.conf import settings
-from django.db import connection
 
 from .models import NotificationLog
 
@@ -52,7 +52,7 @@ class NotificationHandler:
     def __init__(
         self,
         notification_log_id: int,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         channel: str,
         timestamp: float,
         is_replay: bool = False,
@@ -82,11 +82,11 @@ class NotificationHandler:
         """Get record ID if this is a database change notification."""
         return self.data.get('id')
 
-    def get_old_data(self) -> Optional[Dict]:
+    def get_old_data(self) -> Optional[dict]:
         """Get old record data for UPDATE/DELETE operations."""
         return self.data.get('old_data')
 
-    def get_new_data(self) -> Optional[Dict]:
+    def get_new_data(self) -> Optional[dict]:
         """Get new record data for INSERT/UPDATE operations."""
         return self.data.get('new_data')
 
@@ -122,12 +122,12 @@ class BaseConsumer(ABC):
 
     # Class attributes for auto-discovery (can be overridden by subclasses)
     consumer_id: Optional[str] = None
-    channels: List[str] = ['data_change']
+    channels: list[str] = ['data_change']
 
     def __init__(
         self,
         consumer_id: str = None,
-        channels: List[str] = None,
+        channels: list[str] = None,
         timeout_seconds: int = 30,
         reconnect_delay: int = 5,
         max_batch_size: int = 100,
@@ -199,7 +199,7 @@ class BaseConsumer(ABC):
         )
 
     def _process_notifications_batch(
-        self, notifications: List['NotificationLog'], channel: str
+        self, notifications: list['NotificationLog'], channel: str
     ) -> int:
         """Process a batch of notifications and return count of successfully processed."""
         if not notifications:
@@ -345,7 +345,7 @@ class BaseConsumer(ABC):
         except Exception as e:
             logger.error(f'Error handling real-time notification: {e}')
 
-    def fetch_notification_data(self, notification_log_id: int) -> Optional[Dict]:
+    def fetch_notification_data(self, notification_log_id: int) -> Optional[dict]:
         """Fetch notification data from log table for large payloads."""
         try:
             notification = NotificationLog.objects.get(id=notification_log_id)
@@ -416,10 +416,8 @@ class BaseConsumer(ABC):
         self.running = False
 
         if self.connection:
-            try:
+            with contextlib.suppress(Exception):
                 self.connection.close()
-            except Exception:
-                pass
 
     @abstractmethod
     def handle_notification(self, handler: NotificationHandler):
@@ -433,4 +431,3 @@ class BaseConsumer(ABC):
             Exception: If processing fails (will be logged and notification
                 won't be marked as processed)
         """
-        pass

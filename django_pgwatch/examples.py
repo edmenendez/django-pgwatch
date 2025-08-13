@@ -4,7 +4,7 @@ Example consumer implementations for django-pgwatch.
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 from .consumer import BaseConsumer, NotificationHandler
 from .utils import smart_notify
@@ -254,7 +254,7 @@ class WebhookConsumer(BaseConsumer):
         # For now, just log the webhook data
         logger.debug(f'Webhook data: {webhook_data}')
 
-    def send_webhook_http(self, webhook_data: Dict[str, Any]):
+    def send_webhook_http(self, webhook_data: dict[str, Any]):
         """Send webhook via HTTP (implement based on your needs)."""
         import requests
 
@@ -312,7 +312,7 @@ class AnalyticsConsumer(BaseConsumer):
 
         self.send_analytics_event(analytics_data)
 
-    def send_analytics_event(self, event_data: Dict[str, Any]):
+    def send_analytics_event(self, event_data: dict[str, Any]):
         """Send event to analytics service."""
         logger.info(f'Analytics event: {event_data["event"]}')
 
@@ -325,7 +325,7 @@ class AnalyticsConsumer(BaseConsumer):
 
 
 # Example usage functions
-def send_custom_notification(channel: str, event_type: str, data: Dict[str, Any]):
+def send_custom_notification(channel: str, event_type: str, data: dict[str, Any]):
     """
     Helper function to send custom notifications.
 
