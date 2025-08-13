@@ -1,0 +1,20 @@
+# Development dependencies for django-pgwatch
+
+# Testing
+pytest>=7.0
+pytest-django>=4.5
+pytest-cov>=4.0
+
+# Code quality
+ruff>=0.1
+mypy>=1.0
+
+# Django type stubs
+django-stubs>=4.2
+
+# Build tools
+build>=0.10
+twine>=4.0
+
+# Example project dependencies
+psycopg>=3.0
