@@ -93,13 +93,12 @@ class DatabaseChangeConsumer(BaseConsumer):
             old_data = handler.get_old_data()
             new_data = handler.get_new_data()
 
-            if old_data and new_data:
-                # Check for status changes
-                if old_data.get('status') != new_data.get('status'):
-                    logger.info(
-                        f'Order status changed: {old_data.get("status")}'
-                        f' -> {new_data.get("status")}'
-                    )
+            # Check for status changes
+            if old_data and new_data and old_data.get('status') != new_data.get('status'):
+                logger.info(
+                    f'Order status changed: {old_data.get("status")}'
+                    f' -> {new_data.get("status")}'
+                )
                 # Example: Send status update email, trigger fulfillment
 
     def handle_product_change(self, handler: NotificationHandler):
