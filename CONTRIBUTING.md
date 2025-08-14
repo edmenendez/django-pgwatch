@@ -23,7 +23,27 @@ Thank you for your interest in contributing to Django PGWatch!
    pip install -r requirements-dev.txt
    ```
 
-4. **Set up PostgreSQL for testing:**
+4. **Set up PostgreSQL for testing (REQUIRED for tests to pass):**
+   
+   **Option A: Using Docker (Recommended)**
+   ```bash
+   # Start PostgreSQL with the exact same settings as CI
+   docker run --name pgwatch-postgres -d \
+     -e POSTGRES_PASSWORD=postgres \
+     -e POSTGRES_USER=postgres \
+     -e POSTGRES_DB=test_pgwatch \
+     -p 5432:5432 \
+     postgres:15
+   ```
+   
+   **Option B: Local PostgreSQL Installation**
+   ```bash
+   # Create user and database (if using local PostgreSQL)
+   createuser -s postgres  # Create postgres superuser role
+   createdb test_pgwatch -O postgres
+   ```
+   
+   **Option C: Using Docker Compose (from example project)**
    ```bash
    cd example_project
    docker-compose up -d
@@ -31,34 +51,111 @@ Thank you for your interest in contributing to Django PGWatch!
 
 ## Running Tests
 
+**IMPORTANT: PostgreSQL must be running first (see setup above)**
+
 ```bash
-# Run all tests
-pytest
+# Run all tests (mirrors CI exactly)
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest
 
 # Run with coverage
-pytest --cov=django_pgwatch
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest --cov=django_pgwatch
 
 # Run specific test file
-pytest tests/test_models.py
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest tests/test_models.py
 
 # Run with verbose output
-pytest -v
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest -v
+
+# Alternative: Set environment variables first
+export PYTHONPATH=.
+export DJANGO_SETTINGS_MODULE=tests.settings
+pytest  # Now this will work
 ```
+
+**If tests fail with database errors**, ensure:
+1. PostgreSQL is running on port 5432
+2. User `postgres` exists with password `postgres` 
+3. Database `test_pgwatch` exists
+4. Connection settings match `tests/settings.py`
 
 ## Code Quality
 
-We use several tools to maintain code quality:
+We use several tools to maintain code quality. **Run these checks before committing** to avoid CI failures:
 
+### Quick Check (run this before every commit)
 ```bash
-# Format code
+# Run all quality checks that mirror CI pipeline
+ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch
+```
+
+### Individual Commands
+```bash
+# Auto-fix formatting
 ruff format django_pgwatch tests
 
-# Check linting
-ruff check django_pgwatch tests
+# Check linting (with auto-fix option)
+ruff check django_pgwatch tests --fix
+
+# Check formatting only (no changes)
+ruff format --check django_pgwatch tests
 
 # Type checking
 mypy django_pgwatch
 ```
+
+### Complete Pre-Commit Checklist
+Before pushing changes, ensure these all pass:
+1. **Tests**: `PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest`
+2. **Linting**: `ruff check django_pgwatch tests`
+3. **Formatting**: `ruff format --check django_pgwatch tests`
+4. **Type checking**: `mypy django_pgwatch`
+
+Or run the one-liner: `PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest && ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch`
+
+### Optional: Pre-commit Hooks (Recommended)
+Install pre-commit hooks to automatically run these checks before each commit:
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Now the checks run automatically on `git commit`. To run manually:
+```bash
+pre-commit run --all-files
+```
+
+## CI Pipeline
+
+Our GitHub Actions workflow runs these exact same checks:
+
+1. **Setup**: Install Python, dependencies, and start PostgreSQL
+2. **Linting**: `ruff check` and `ruff format --check`
+3. **Type Checking**: `mypy django_pgwatch`
+4. **Database Setup**: Run Django migrations
+5. **Tests**: `pytest` with coverage
+6. **Package Build**: Verify the package builds correctly
+
+**The local commands above mirror the CI pipeline** - if they pass locally, CI should pass.
+
+## Troubleshooting
+
+### Common Issues
+
+**MyPy Errors About Missing Types**
+- If you see `Library stubs not installed for "xyz"`, add `# type: ignore` to the import
+- For Django model fields, avoid verbose type annotations - our mypy config handles them
+
+**Ruff Import Sorting**
+- Run `ruff check --fix` to auto-fix import ordering
+- Imports should be: stdlib, third-party, local (with blank lines between)
+
+**MyPy Django Issues**
+- Ensure you're using the project's virtual environment
+- Our mypy config is optimized for Django - don't make it stricter
+
+**PostgreSQL Connection Errors in Tests**
+- Tests need PostgreSQL running (see development setup)
+- Check your `POSTGRES_*` environment variables match `tests/settings.py`
 
 ## Testing the Example Project
 
@@ -84,11 +181,18 @@ python manage.py pgwatch_listen
 
 ## Pull Request Guidelines
 
-- Include tests for new functionality
-- Update documentation if needed
-- Follow the existing code style
-- Ensure all CI checks pass
-- Write clear commit messages
+- **Include tests** for new functionality
+- **Run the complete pre-commit checklist** (see Code Quality section above)
+- **Update documentation** if needed (README.md, docstrings, etc.)
+- **Follow the existing code style** (enforced by ruff)
+- **Ensure all CI checks pass** - run the same commands locally first
+- **Write clear commit messages** describing the "why" not just the "what"
+
+### Before Submitting Your PR
+Run this command and ensure it passes:
+```bash
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest && ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch
+```
 
 ## Reporting Issues
 
