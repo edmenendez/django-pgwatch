@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.contrib import admin, messages
 from django.db.models import Count
 from django.http import HttpResponseRedirect
@@ -61,6 +62,7 @@ class NotificationLogAdmin(admin.ModelAdmin):
         ),
     )
 
+    @admin.display(description='Payload Preview')
     def payload_preview(self, obj):
         """Show a truncated preview of the payload."""
         payload_str = str(obj.payload)
@@ -70,8 +72,7 @@ class NotificationLogAdmin(admin.ModelAdmin):
             )
         return format_html('<code>{}</code>', payload_str)
 
-    payload_preview.short_description = 'Payload Preview'
-
+    @admin.display(description='Consumers')
     def consumer_count(self, obj):
         """Show how many consumers have processed this notification."""
         count = len(obj.processed_by)
@@ -79,8 +80,7 @@ class NotificationLogAdmin(admin.ModelAdmin):
             return format_html('<span style="color: red;">0</span>')
         return count
 
-    consumer_count.short_description = 'Consumers'
-
+    @admin.display(description='Payload Size')
     def payload_size_display(self, obj):
         """Display payload size in human-readable format."""
         size = obj.payload_size
@@ -91,8 +91,7 @@ class NotificationLogAdmin(admin.ModelAdmin):
         else:
             return f'{size / (1024 * 1024):.1f} MB'
 
-    payload_size_display.short_description = 'Payload Size'
-
+    @admin.display(description='Processed By')
     def consumer_list(self, obj):
         """Display list of consumers that processed this notification."""
         if not obj.processed_by:
@@ -101,12 +100,12 @@ class NotificationLogAdmin(admin.ModelAdmin):
         consumers = ', '.join(obj.processed_by)
         return format_html('<code>{}</code>', consumers)
 
-    consumer_list.short_description = 'Processed By'
 
     def get_queryset(self, request):
         """Optimize queryset for admin list view."""
         return super().get_queryset(request).select_related()
 
+    @admin.action(description='Delete selected notification logs')
     def cleanup_selected(self, request, queryset):
         """Admin action to delete selected notifications."""
         count = queryset.count()
@@ -116,8 +115,7 @@ class NotificationLogAdmin(admin.ModelAdmin):
             request, f'Successfully deleted {count} notification logs.', messages.SUCCESS
         )
 
-    cleanup_selected.short_description = 'Delete selected notification logs'
-
+    @admin.action(description='Mark for reprocessing (clear consumer lists)')
     def reprocess_notifications(self, request, queryset):
         """Admin action to mark notifications for reprocessing."""
         count = 0
@@ -131,10 +129,6 @@ class NotificationLogAdmin(admin.ModelAdmin):
             f'Marked {count} notifications for reprocessing (cleared consumer lists).',
             messages.SUCCESS,
         )
-
-    reprocess_notifications.short_description = (
-        'Mark for reprocessing (clear consumer lists)'
-    )
 
     def changelist_view(self, request, extra_context=None):
         """Add summary statistics to the changelist view."""
@@ -151,7 +145,7 @@ class NotificationLogAdmin(admin.ModelAdmin):
         )
 
         # Recent notifications (last 24 hours)
-        last_24h = timezone.now() - timezone.timedelta(hours=24)
+        last_24h = timezone.now() - timedelta(hours=24)
         recent_count = NotificationLog.objects.filter(created_at__gte=last_24h).count()
 
         # Unprocessed notifications

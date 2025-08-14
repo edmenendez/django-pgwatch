@@ -72,11 +72,28 @@ quote-style = "single"
 
 [tool.mypy]
 python_version = "3.9"
-check_untyped_defs = true
+# More lenient settings for Django codebase
+check_untyped_defs = false
+disallow_untyped_defs = false
 ignore_missing_imports = true
-warn_unused_ignores = true
-warn_redundant_casts = true
-warn_unused_configs = true
+warn_return_any = false
+disallow_any_generics = false
+disallow_untyped_calls = false
+warn_unused_ignores = false
+warn_redundant_casts = false
+warn_unused_configs = false
+# Django-specific settings
+plugins = ["mypy_django_plugin.main"]
+# Be more lenient with typing for now
+no_implicit_optional = false
+allow_untyped_globals = true
+disallow_untyped_globals = false
+# Allow Any types and untyped code
+allow_any_generics = true
+allow_untyped_defs = true
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"

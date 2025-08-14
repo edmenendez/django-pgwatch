@@ -118,7 +118,7 @@ class Command(BaseCommand):
                         self.style.WARNING(f'App "{name}" not found in INSTALLED_APPS')
                     )
         else:
-            app_configs = apps.get_app_configs()
+            app_configs = list(apps.get_app_configs())
 
         for app_config in app_configs:
             try:

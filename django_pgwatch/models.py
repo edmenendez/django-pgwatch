@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -78,6 +79,6 @@ class NotificationLog(models.Model):
     @classmethod
     def cleanup_old(cls, days_to_keep=7):
         """Remove old notification logs."""
-        cutoff_date = timezone.now() - timezone.timedelta(days=days_to_keep)
+        cutoff_date = timezone.now() - timedelta(days=days_to_keep)
         deleted_count, _ = cls.objects.filter(created_at__lt=cutoff_date).delete()
         return deleted_count

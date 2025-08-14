@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -28,7 +29,7 @@ class Command(BaseCommand):
         if dry_run:
             from django_pgwatch.models import NotificationLog
 
-            cutoff_date = timezone.now() - timezone.timedelta(days=days)
+            cutoff_date = timezone.now() - timedelta(days=days)
             count = NotificationLog.objects.filter(created_at__lt=cutoff_date).count()
 
             self.stdout.write(

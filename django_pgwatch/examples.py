@@ -44,57 +44,62 @@ class DatabaseChangeConsumer(BaseConsumer):
         """Handle user table changes."""
         if handler.is_insert():
             new_data = handler.get_new_data()
-            logger.info(
-                f'New user created: {new_data.get("email")}'
-                f' (ID: {handler.get_record_id()})'
-            )
+            if new_data:
+                logger.info(
+                    f'New user created: {new_data.get("email")}'
+                    f' (ID: {handler.get_record_id()})'
+                )
             # Example: Send welcome email, create user profile, etc.
 
         elif handler.is_update():
             old_data = handler.get_old_data()
             new_data = handler.get_new_data()
 
-            # Check for email changes
-            if old_data.get('email') != new_data.get('email'):
-                logger.info(
-                    f'User email changed: {old_data.get("email")}'
-                    f' -> {new_data.get("email")}'
-                )
-                # Example: Update external systems, send confirmation email
+            if old_data and new_data:
+                # Check for email changes
+                if old_data.get('email') != new_data.get('email'):
+                    logger.info(
+                        f'User email changed: {old_data.get("email")}'
+                        f' -> {new_data.get("email")}'
+                    )
+                    # Example: Update external systems, send confirmation email
 
-            # Check for status changes
-            if old_data.get('is_active') != new_data.get('is_active'):
-                status = 'activated' if new_data.get('is_active') else 'deactivated'
-                logger.info(f'User {status}: {new_data.get("email")}')
-                # Example: Update permissions, send notification
+                # Check for status changes
+                if old_data.get('is_active') != new_data.get('is_active'):
+                    status = 'activated' if new_data.get('is_active') else 'deactivated'
+                    logger.info(f'User {status}: {new_data.get("email")}')
+                    # Example: Update permissions, send notification
 
         elif handler.is_delete():
             old_data = handler.get_old_data()
-            logger.info(
-                f'User deleted: {old_data.get("email")} (ID: {handler.get_record_id()})'
-            )
+            if old_data:
+                logger.info(
+                    f'User deleted: {old_data.get("email")} (ID: {handler.get_record_id()})'
+                )
             # Example: Cleanup related data, send deletion confirmation
 
     def handle_order_change(self, handler: NotificationHandler):
         """Handle order table changes."""
         if handler.is_insert():
             new_data = handler.get_new_data()
-            logger.info(
-                f'New order created: #{new_data.get("order_number")}'
-                f' for user {new_data.get("user_id")}'
-            )
+            if new_data:
+                logger.info(
+                    f'New order created: #{new_data.get("order_number")}'
+                    f' for user {new_data.get("user_id")}'
+                )
             # Example: Send order confirmation, update inventory, process payment
 
         elif handler.is_update():
             old_data = handler.get_old_data()
             new_data = handler.get_new_data()
 
-            # Check for status changes
-            if old_data.get('status') != new_data.get('status'):
-                logger.info(
-                    f'Order status changed: {old_data.get("status")}'
-                    f' -> {new_data.get("status")}'
-                )
+            if old_data and new_data:
+                # Check for status changes
+                if old_data.get('status') != new_data.get('status'):
+                    logger.info(
+                        f'Order status changed: {old_data.get("status")}'
+                        f' -> {new_data.get("status")}'
+                    )
                 # Example: Send status update email, trigger fulfillment
 
     def handle_product_change(self, handler: NotificationHandler):
@@ -102,26 +107,27 @@ class DatabaseChangeConsumer(BaseConsumer):
         if handler.is_update():
             old_data = handler.get_old_data()
             new_data = handler.get_new_data()
+            
+            if old_data and new_data:
+                # Check for price changes
+                if old_data.get('price') != new_data.get('price'):
+                    logger.info(
+                        f'Product price changed: {old_data.get("price")}'
+                        f' -> {new_data.get("price")}'
+                    )
+                    # Example: Update search index, notify price watchers
 
-            # Check for price changes
-            if old_data.get('price') != new_data.get('price'):
-                logger.info(
-                    f'Product price changed: {old_data.get("price")}'
-                    f' -> {new_data.get("price")}'
-                )
-                # Example: Update search index, notify price watchers
+                # Check for inventory changes
+                if old_data.get('stock_quantity') != new_data.get('stock_quantity'):
+                    old_qty = old_data.get('stock_quantity', 0)
+                    new_qty = new_data.get('stock_quantity', 0)
 
-            # Check for inventory changes
-            if old_data.get('stock_quantity') != new_data.get('stock_quantity'):
-                old_qty = old_data.get('stock_quantity', 0)
-                new_qty = new_data.get('stock_quantity', 0)
-
-                if old_qty > 0 and new_qty == 0:
-                    logger.warning(f'Product out of stock: {new_data.get("name")}')
-                    # Example: Send out of stock notification
-                elif old_qty == 0 and new_qty > 0:
-                    logger.info(f'Product back in stock: {new_data.get("name")}')
-                    # Example: Send back in stock notification
+                    if old_qty > 0 and new_qty == 0:
+                        logger.warning(f'Product out of stock: {new_data.get("name")}')
+                        # Example: Send out of stock notification
+                    elif old_qty == 0 and new_qty > 0:
+                        logger.info(f'Product back in stock: {new_data.get("name")}')
+                        # Example: Send back in stock notification
 
     def handle_generic_change(self, handler: NotificationHandler):
         """Handle changes for tables without specific handlers."""
@@ -256,7 +262,7 @@ class WebhookConsumer(BaseConsumer):
 
     def send_webhook_http(self, webhook_data: dict[str, Any]):
         """Send webhook via HTTP (implement based on your needs)."""
-        import requests
+        import requests  # type: ignore
 
         webhook_url = 'https://your-webhook-endpoint.com/webhook'
 
@@ -286,9 +292,12 @@ class AnalyticsConsumer(BaseConsumer):
         if handler.is_replay:
             return
 
-        event_name = f'{handler.get_table()}.{handler.get_action().lower()}'
+        action = handler.get_action()
+        if not action:
+            return
+        event_name = f'{handler.get_table()}.{action.lower()}'
 
-        analytics_data = {
+        analytics_data: dict[str, Any] = {
             'event': event_name,
             'timestamp': handler.timestamp,
             'properties': {
