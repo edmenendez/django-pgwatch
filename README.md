@@ -1,5 +1,12 @@
 # django-pgwatch
 
+[![Tests](https://img.shields.io/github/actions/workflow/status/edmenendez/django-pgwatch/test.yml?branch=main&label=Tests)](https://github.com/edmenendez/django-pgwatch/actions/workflows/test.yml)
+[![PyPI version](https://img.shields.io/pypi/v/django-pgwatch)](https://pypi.org/project/django-pgwatch/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/django-pgwatch)](https://pypi.org/project/django-pgwatch/)
+[![Python versions](https://img.shields.io/pypi/pyversions/django-pgwatch)](https://pypi.org/project/django-pgwatch/)
+[![Django versions](https://img.shields.io/pypi/frameworkversions/django/django-pgwatch)](https://pypi.org/project/django-pgwatch/)
+[![License](https://img.shields.io/pypi/l/django-pgwatch)](https://github.com/edmenendez/django-pgwatch/blob/main/LICENSE)
+
 A Django app that provides PostgreSQL LISTEN/NOTIFY functionality with persistence and playback capabilities for **external database changes**. This tool is specifically designed for scenarios where database changes happen outside of your Django application and you need to react to them reliably.
 
 ## When to Use This Tool
