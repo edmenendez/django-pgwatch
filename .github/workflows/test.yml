@@ -60,6 +60,7 @@ jobs:
 
     - name: Run Django migrations
       env:
+        PYTHONPATH: .
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
         POSTGRES_USER: postgres
@@ -71,6 +72,7 @@ jobs:
 
     - name: Run tests
       env:
+        PYTHONPATH: .
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
         POSTGRES_USER: postgres
