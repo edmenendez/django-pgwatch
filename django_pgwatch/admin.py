@@ -1,4 +1,5 @@
 from datetime import timedelta
+
 from django.contrib import admin, messages
 from django.db.models import Count
 from django.http import HttpResponseRedirect

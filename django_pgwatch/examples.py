@@ -107,7 +107,7 @@ class DatabaseChangeConsumer(BaseConsumer):
         if handler.is_update():
             old_data = handler.get_old_data()
             new_data = handler.get_new_data()
-            
+
             if old_data and new_data:
                 # Check for price changes
                 if old_data.get('price') != new_data.get('price'):
