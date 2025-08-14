@@ -1,0 +1,36 @@
+# Pre-commit hooks to run quality checks automatically
+# Install with: pip install pre-commit && pre-commit install
+# Run manually with: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version
+    rev: v0.12.8
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi]
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        files: ^django_pgwatch/
+        additional_dependencies:
+          - django-stubs>=4.2
+        args: [--config-file=pyproject.toml]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: bash
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+        args: [-c, 'PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings POSTGRES_HOST=localhost POSTGRES_PORT=55235 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch pytest --tb=short']

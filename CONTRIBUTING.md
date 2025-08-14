@@ -27,12 +27,12 @@ Thank you for your interest in contributing to Django PGWatch!
    
    **Option A: Using Docker (Recommended)**
    ```bash
-   # Start PostgreSQL with the exact same settings as CI
+   # Start PostgreSQL on alternate port to avoid conflicts
    docker run --name pgwatch-postgres -d \
      -e POSTGRES_PASSWORD=postgres \
      -e POSTGRES_USER=postgres \
      -e POSTGRES_DB=test_pgwatch \
-     -p 5432:5432 \
+     -p 55235:5432 \
      postgres:15
    ```
    
@@ -54,29 +54,32 @@ Thank you for your interest in contributing to Django PGWatch!
 **IMPORTANT: PostgreSQL must be running first (see setup above)**
 
 ```bash
-# Run all tests (mirrors CI exactly)
-PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest
+# Quick test (with Docker PostgreSQL on port 55235)
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings \
+POSTGRES_HOST=localhost POSTGRES_PORT=55235 \
+POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch \
+pytest
 
 # Run with coverage
-PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest --cov=django_pgwatch
+PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings \
+POSTGRES_HOST=localhost POSTGRES_PORT=55235 \
+POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch \
+pytest --cov=django_pgwatch
 
-# Run specific test file
-PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest tests/test_models.py
-
-# Run with verbose output
-PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest -v
-
-# Alternative: Set environment variables first
+# Alternative: Set environment variables first (recommended)
 export PYTHONPATH=.
 export DJANGO_SETTINGS_MODULE=tests.settings
+export POSTGRES_HOST=localhost POSTGRES_PORT=55235
+export POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch
 pytest  # Now this will work
 ```
 
 **If tests fail with database errors**, ensure:
-1. PostgreSQL is running on port 5432
+1. PostgreSQL is running on port 55235 (Docker) or 5432 (local)
 2. User `postgres` exists with password `postgres` 
 3. Database `test_pgwatch` exists
 4. Connection settings match `tests/settings.py`
+5. Environment variables are set: `POSTGRES_HOST=localhost POSTGRES_PORT=55235` (if using Docker)
 
 ## Code Quality
 
@@ -105,12 +108,17 @@ mypy django_pgwatch
 
 ### Complete Pre-Commit Checklist
 Before pushing changes, ensure these all pass:
-1. **Tests**: `PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest`
+1. **Tests**: `PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings POSTGRES_HOST=localhost POSTGRES_PORT=55235 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch pytest`
 2. **Linting**: `ruff check django_pgwatch tests`
 3. **Formatting**: `ruff format --check django_pgwatch tests`
 4. **Type checking**: `mypy django_pgwatch`
 
-Or run the one-liner: `PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest && ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch`
+Or set environment variables and run the one-liner:
+```bash
+export PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings
+export POSTGRES_HOST=localhost POSTGRES_PORT=55235 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch
+pytest && ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch
+```
 
 ### Optional: Pre-commit Hooks (Recommended)
 Install pre-commit hooks to automatically run these checks before each commit:
@@ -119,10 +127,34 @@ pip install pre-commit
 pre-commit install
 ```
 
+**Note**: Pre-commit hooks include pytest, so PostgreSQL must be running (see setup above) for commits to succeed.
+
 Now the checks run automatically on `git commit`. To run manually:
 ```bash
 pre-commit run --all-files
 ```
+
+## Full CI Matrix Testing (Advanced)
+
+To test all Python/Django combinations that run in CI (Python 3.9-3.12 with Django 4.2, 5.0, 5.1):
+
+```bash
+# Run the complete CI matrix using Docker
+python test-matrix-docker.py
+
+# This tests all 10 valid combinations:
+# - Python 3.9 + Django 4.2
+# - Python 3.10 + Django 4.2, 5.0, 5.1  
+# - Python 3.11 + Django 4.2, 5.0, 5.1
+# - Python 3.12 + Django 4.2, 5.0, 5.1
+```
+
+**Requirements for matrix testing:**
+- Docker must be installed and running
+- PostgreSQL container must be running (see setup above)
+- Each combination runs in complete isolation with its own container
+
+This is the most comprehensive test and exactly mirrors what GitHub Actions runs.
 
 ## CI Pipeline
 
@@ -191,7 +223,9 @@ python manage.py pgwatch_listen
 ### Before Submitting Your PR
 Run this command and ensure it passes:
 ```bash
-PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings pytest && ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch
+export PYTHONPATH=. DJANGO_SETTINGS_MODULE=tests.settings
+export POSTGRES_HOST=localhost POSTGRES_PORT=55235 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=test_pgwatch
+pytest && ruff check django_pgwatch tests && ruff format --check django_pgwatch tests && mypy django_pgwatch
 ```
 
 ## Reporting Issues
